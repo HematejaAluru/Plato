@@ -1,5 +1,9 @@
 # tools.py
 
+import matplotlib
+# Set the backend to 'Agg' before importing pyplot
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 from typing import Annotated
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
@@ -18,10 +22,24 @@ def python_repl(
     """Use this to execute python code. If you want to see the output of a value,
     you should print it out with `print(...)`. This is visible to the user."""
     try:
+        # Add default plotting configuration
+        setup_code = """
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+plt.switch_backend('Agg')
+"""
+        repl.run(setup_code)
         result = repl.run(code)
+        # Save any generated plots
+        if 'plt' in code:
+            plt.savefig('output_plot.png')
+            plt.close()
     except BaseException as e:
         return f"Failed to execute. Error: {repr(e)}"
     result_str = f"Successfully executed:\n```python\n{code}\n```\nStdout: {result}"
+    if 'plt' in code:
+        result_str += "\nPlot has been saved as 'output_plot.png'"
     return (
         result_str + "\n\nIf you have completed all tasks, respond with FINAL ANSWER."
     )
